@@ -33,12 +33,9 @@ extension Reactive where Base: ApiManager {
         return URLSession.shared
             .rx
             .data(request: request)
-            .map { data in
-                try JSONDecoder().decode(Token.self, from: data)
-            }
+            .map {  try JSONDecoder().decode(Token.self, from: $0) }
             .do(onNext: { response in
-                let encoder = JSONEncoder()
-                let data = try encoder.encode(response)
+                let data = try JSONEncoder().encode(response)
                 KeychainHelper.standard.save(data, service: "access-token", account: "petfinder")
             })
             .map { _ in () }
@@ -61,11 +58,8 @@ extension Reactive where Base: ApiManager {
         return URLSession.shared
             .rx
             .data(request: request)
-            .map { data in
-                try JSONDecoder().decode(Animals.self, from: data)
-            }.map { animals in
-                return animals.animals
-            }
+            .map { try JSONDecoder().decode(Animals.self, from: $0) }
+            .map { $0.animals }
     }
     
 }

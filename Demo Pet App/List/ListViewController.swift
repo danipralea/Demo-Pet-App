@@ -16,27 +16,39 @@ class ListViewController: UIViewController {
     private let disposeBag = DisposeBag()
     
     @IBOutlet weak var tableView: UITableView!
+    let refreshControl = UIRefreshControl()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Pets"
-        
+        setupViews()
+        setupRx()
+    }
+    
+    private func setupViews() {
+        refreshControl.attributedTitle = NSAttributedString(string: "Pull to refresh")
+        tableView.addSubview(refreshControl)
+    }
+    
+    private func setupRx() {
         HUD.show(.progress, onView: view)
-        ApiManager.rx
-            .getToken()
-            .flatMapLatest({ _ in
-                return ApiManager.rx.getPets()
-            })
-            .do(onCompleted: {
-                DispatchQueue.main.async {                    
-                    HUD.hide()
-                }
-            })
-            .bind(to: tableView.rx.items(cellIdentifier: "cell")) { index, model, cell in
-                guard let cell = cell as? ListTableViewCell else { return }
-                cell.update(with: model)
+        // bind data to tableview
+        viewModel.output.pets
+            .do(onNext: { _ in HUD.hide() })
+            .drive(tableView.rx.items(cellIdentifier: ListTableViewCell.ClassName, cellType: ListTableViewCell.self)) { (row, pet, cell) in
+                cell.update(with: pet)
             }
             .disposed(by: disposeBag)
+        
+        viewModel.output.errorMessage
+            .do(onNext: { _ in HUD.hide() })
+            .drive(onNext: { [weak self] errorMessage in
+                guard let self = self else { return }
+                self.showError(errorMessage)
+            })
+            .disposed(by: disposeBag)
+        
+        viewModel.input.reload.accept(())
         
         tableView.rx
             .modelSelected(Pet.self)
@@ -44,8 +56,8 @@ class ListViewController: UIViewController {
             .map({ [weak self] pet -> UIViewController? in
                 guard let self = self else { return nil }
                 guard let controller = self.storyboard?.instantiateViewController(identifier: DetailsViewController.ClassName) as? DetailsViewController else { return nil }
-                let viewModelFactory = { inputs -> DetailsViewModel in
-                    return DetailsViewModel(pet: pet, inputs: inputs)
+                let viewModelFactory = {
+                    return DetailsViewModel(pet: pet)
                 }
                 controller.viewModelFactory = viewModelFactory
                 return controller
@@ -59,5 +71,24 @@ class ListViewController: UIViewController {
                 self.navigationController?.pushViewController(controller, animated: true)
             })
             .disposed(by: disposeBag)
+        
+        refreshControl
+            .rx.controlEvent(.valueChanged)
+            .do(onNext: { [weak self] _ in
+                self?.viewModel.input.reload.accept(())
+            })
+            .subscribe(onNext: { [weak self] in
+                self?.refreshControl.endRefreshing()
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    // MARK: - UI
+    
+    private func showError(_ errorMessage: String) {
+        // display error ?
+        let controller = UIAlertController(title: "An error occured", message: "Oops, something went wrong!", preferredStyle: .alert)
+        controller.addAction(UIAlertAction(title: "Close", style: .cancel, handler: nil))
+        self.present(controller, animated: true, completion: nil)
     }
 }

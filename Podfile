@@ -1,13 +1,16 @@
 platform :ios, '16.0'
+use_frameworks!
+inhibit_all_warnings!
 
 target 'Demo Pet App' do
-    use_frameworks!
-    inhibit_all_warnings!
-  
   pod 'RxSwift'
   pod 'RxDataSources'
   pod 'RxCoreLocation'
   pod 'PKHUD'
+  
+  target 'Demo Pet AppTests' do
+    pod 'RxTest'
+  end
 end
 
 post_install do |installer|

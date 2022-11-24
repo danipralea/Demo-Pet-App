@@ -19,7 +19,7 @@ class DetailsViewController: UIViewController {
     @IBOutlet weak var statusLabel: UILabel!
     @IBOutlet weak var distanceLabel: UILabel!
     
-    var viewModelFactory: (DetailsViewModel.Inputs) -> DetailsViewModel = { _ in fatalError("Must provide factory function first.") }
+    var viewModelFactory: () -> DetailsViewModel = { fatalError("Must provide factory function first.") }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,15 +27,13 @@ class DetailsViewController: UIViewController {
     }
     
     private func setupRx() {
-        let inputs = DetailsViewModel.Inputs(bag: disposeBag)
-        
-        let viewModel = viewModelFactory(inputs)
+        let viewModel = viewModelFactory()
         let outputs = viewModel.outputs
-        outputs.name.bind(to: nameLabel.rx.text).disposed(by: disposeBag)
-        outputs.breed.bind(to: breedLabel.rx.text).disposed(by: disposeBag)
-        outputs.size.bind(to: sizeLabel.rx.text).disposed(by: disposeBag)
-        outputs.gender.bind(to: genderLabel.rx.text).disposed(by: disposeBag)
-        outputs.status.bind(to: statusLabel.rx.text).disposed(by: disposeBag)
-        outputs.distance.bind(to: distanceLabel.rx.text).disposed(by: disposeBag)
+        outputs.name.drive(nameLabel.rx.text).disposed(by: disposeBag)
+        outputs.breed.drive(breedLabel.rx.text).disposed(by: disposeBag)
+        outputs.size.drive(sizeLabel.rx.text).disposed(by: disposeBag)
+        outputs.gender.drive(genderLabel.rx.text).disposed(by: disposeBag)
+        outputs.status.drive(statusLabel.rx.text).disposed(by: disposeBag)
+        outputs.distance.drive(distanceLabel.rx.text).disposed(by: disposeBag)
     }
 }

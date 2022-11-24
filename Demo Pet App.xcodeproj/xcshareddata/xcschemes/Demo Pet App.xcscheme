@@ -38,9 +38,13 @@
                BlueprintName = "Demo Pet AppTests"
                ReferencedContainer = "container:Demo Pet App.xcodeproj">
             </BuildableReference>
+            <LocationScenarioReference
+               identifier = "San Francisco, CA, USA"
+               referenceType = "1">
+            </LocationScenarioReference>
          </TestableReference>
          <TestableReference
-            skipped = "NO"
+            skipped = "YES"
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"

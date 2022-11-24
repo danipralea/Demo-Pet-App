@@ -9,27 +9,23 @@ import Foundation
 import RxSwift
 import CoreLocation
 import RxCoreLocation
+import RxCocoa
 
 struct DetailsViewModel {
     
-    struct Inputs {
-        let bag: DisposeBag
-    }
-    
     struct Outputs {
-        let name: Observable<String?>
-        let breed: Observable<String?>
-        let size: Observable<String?>
-        let gender: Observable<String?>
-        let status: Observable<String?>
-        let distance: Observable<String?>
+        let name: Driver<String?>
+        let breed: Driver<String?>
+        let size: Driver<String?>
+        let gender: Driver<String?>
+        let status: Driver<String?>
+        let distance: Driver<String?>
     }
     
-    private let pet: Pet
-    
+    let pet: Pet
     let outputs: Outputs
     
-    init(pet: Pet, inputs: Inputs) {
+    init(pet: Pet) {
         self.pet = pet
         
         let locationManager = CLLocationManager()
@@ -42,9 +38,14 @@ struct DetailsViewModel {
             locationManager.requestWhenInUseAuthorization()
         }
         
-        let location = locationManager.rx.location.compactMap({$0})
-        let petLocation = (pet.contact?.address?.fullAddress ?? "").getCoordinate
-        let locationToPet : Observable<String?> = Observable
+        let location = locationManager.rx
+            .location
+            .compactMap({$0})
+        let petFullAddress = pet.contact?.address?.fullAddress ?? ""
+        let petLocation = petFullAddress
+                .getCoordinate
+        
+        let locationToPet : Driver<String?> = Observable
             .combineLatest(location, petLocation)
             .map { $0.0.distance(from: $0.1) }
             .map { distance -> String? in
@@ -52,13 +53,14 @@ struct DetailsViewModel {
                 let justKm = Int(km)
                 return String(justKm) + " km"
             }
+            .asDriver(onErrorJustReturn: "N/A")
         
         outputs = Outputs(
-            name: Observable.just(pet.name),
-            breed: Observable.just(pet.breeds?.primary),
-            size: Observable.just(pet.size),
-            gender: Observable.just(pet.gender),
-            status: Observable.just("N/A"),
+            name: Driver.just(pet.name),
+            breed: Driver.just(pet.breeds?.primary),
+            size: Driver.just(pet.size),
+            gender: Driver.just(pet.gender),
+            status: Driver.just("N/A"),
             distance: locationToPet
         )
         
