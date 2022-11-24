@@ -1,0 +1,12 @@
+//
+//  Config.xcconfig
+//  Demo Pet App
+//
+//  Created by Danut Pralea on 21.11.2022.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+API_KEY = 8FvB92COL3loJkRHBozGPLOVKZTG4CgXal6Dou6EjsH5lj2SXB
+API_SECRET = zcYSA3CrhG6yW1dc539o8rAVgj7ecwLUaYHTSe3s
